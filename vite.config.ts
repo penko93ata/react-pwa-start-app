@@ -17,20 +17,17 @@ export default defineConfig({
     // basicSsl(),
     VitePWA({
       registerType: "autoUpdate",
-      // injectRegister: false,
-
-      // pwaAssets: {
-      //   disabled: false,
-      //   config: true,
-      // },
-
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
-
+      devOptions: {
+        enabled: true,
+        type: "module",
+        navigateFallback: "index.html",
+      },
       manifest: {
         name: "react-pwa-starter-app",
         short_name: "react-pwa-starter-app",
         description: "Introduction to PWA",
         theme_color: "#ffffff",
+        background_color: "#ffffff",
         display: "standalone",
         scope: "/",
         start_url: "/",
@@ -49,27 +46,33 @@ export default defineConfig({
             src: "pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
-          },
-          {
-            src: "maskable-icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
+            purpose: "any maskable",
           },
         ],
       },
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
 
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        globDirectory: "dist",
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-cache",
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-      },
-
-      devOptions: {
-        enabled: false,
-        navigateFallback: "index.html",
-        suppressWarnings: true,
-        type: "module",
       },
     }),
   ],
