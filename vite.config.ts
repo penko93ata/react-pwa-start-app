@@ -1,26 +1,17 @@
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-// import fs from "fs-extra";
-// import basicSsl from "@vitejs/plugin-basic-ssl";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  // server: {
-  //   https: {
-  //     key: fs.readFileSync("./certs/cert.key"),
-  //     cert: fs.readFileSync("./certs/cert.crt"),
-  //   },
-  // },
   plugins: [
     react(),
-    // basicSsl(),
     VitePWA({
       registerType: "autoUpdate",
       devOptions: {
         enabled: true,
         type: "module",
         navigateFallback: "index.html",
+        suppressWarnings: true,
       },
       manifest: {
         name: "react-pwa-starter-app",
@@ -50,20 +41,22 @@ export default defineConfig({
           },
         ],
       },
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
-
       workbox: {
-        globDirectory: "dist",
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        sourcemap: true,
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        mode: "development",
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
+            urlPattern: /^https:\/\/localhost:5173\/.*/i,
+            handler: "NetworkFirst",
             options: {
-              cacheName: "google-fonts-cache",
+              cacheName: "api-cache",
+              networkTimeoutSeconds: 5,
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // <== 365 days
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60, // 1 hour
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -71,8 +64,6 @@ export default defineConfig({
             },
           },
         ],
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
       },
     }),
   ],
