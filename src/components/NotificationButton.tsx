@@ -23,11 +23,17 @@ export const NotificationButton = () => {
       if (hasPermission) {
         await subscribeToNotifications();
         setIsSubscribed(true);
-        // Send a test notification
-        await sendTestNotification();
       }
     } catch (error) {
       console.error("Failed to subscribe:", error);
+    }
+  };
+
+  const handleSendNotification = async (type: "default" | "like" | "custom") => {
+    try {
+      await sendTestNotification(type);
+    } catch (error) {
+      console.error("Failed to send notification:", error);
     }
   };
 
@@ -36,19 +42,65 @@ export const NotificationButton = () => {
   }
 
   return (
-    <button
-      onClick={handleSubscribe}
-      disabled={isSubscribed}
-      style={{
-        padding: "10px 20px",
-        backgroundColor: isSubscribed ? "#ccc" : "#007bff",
-        color: "white",
-        border: "none",
-        borderRadius: "5px",
-        cursor: isSubscribed ? "default" : "pointer",
-      }}
-    >
-      {isSubscribed ? "Notifications Enabled" : "Enable Notifications"}
-    </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+      <button
+        onClick={handleSubscribe}
+        disabled={isSubscribed}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: isSubscribed ? "#ccc" : "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: isSubscribed ? "default" : "pointer",
+        }}
+      >
+        {isSubscribed ? "Notifications Enabled" : "Enable Notifications"}
+      </button>
+
+      {isSubscribed && (
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={() => handleSendNotification("default")}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Send Default
+          </button>
+          <button
+            onClick={() => handleSendNotification("like")}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#dc3545",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Send Like
+          </button>
+          <button
+            onClick={() => handleSendNotification("custom")}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#17a2b8",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Send Custom
+          </button>
+        </div>
+      )}
+    </div>
   );
 };

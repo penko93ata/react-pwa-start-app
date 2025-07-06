@@ -7,12 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
       devOptions: {
         enabled: true,
         type: "module",
         navigateFallback: "index.html",
-        suppressWarnings: true,
       },
+      includeAssets: ["pwa-192x192.png", "pwa-512x512.png", "favicon.ico"],
       manifest: {
         name: "react-pwa-starter-app",
         short_name: "react-pwa-starter-app",
@@ -24,17 +25,12 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "pwa-64x64.png",
-            sizes: "64x64",
-            type: "image/png",
-          },
-          {
-            src: "pwa-192x192.png",
+            src: "/pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "pwa-512x512.png",
+            src: "/pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable",
@@ -49,6 +45,7 @@ export default defineConfig({
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
+              networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
@@ -56,10 +53,8 @@ export default defineConfig({
             },
           },
         ],
+        cleanupOutdatedCaches: true,
       },
-      strategies: "injectManifest",
-      srcDir: "src",
-      filename: "sw.ts",
     }),
   ],
 });
