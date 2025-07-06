@@ -42,29 +42,24 @@ export default defineConfig({
         ],
       },
       workbox: {
-        sourcemap: true,
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        mode: "development",
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/localhost:5173\/.*/i,
+            urlPattern: /^https:\/\/api\.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
-              networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60, // 1 hour
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
             },
           },
         ],
       },
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
     }),
   ],
 });
