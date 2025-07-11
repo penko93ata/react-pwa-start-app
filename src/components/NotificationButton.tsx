@@ -1,17 +1,32 @@
 import { useState, useEffect } from "react";
-import { checkNotificationPermission, subscribeToNotifications, sendTestNotification } from "../services/notificationService";
+import {
+  checkNotificationPermission,
+  subscribeToNotifications,
+  sendTestNotification,
+  testServerNotification,
+} from "../services/notificationService";
 
 export const NotificationButton = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSupport = async () => {
-      const supported = "Notification" in window && "serviceWorker" in navigator;
-      setIsSupported(supported);
-      if (supported) {
-        const permission = await checkNotificationPermission();
-        setIsSubscribed(permission);
+      try {
+        console.log("Checking notification support...");
+        const supported = "Notification" in window && "serviceWorker" in navigator;
+        console.log("Notifications supported:", supported);
+        setIsSupported(supported);
+
+        if (supported) {
+          const permission = await checkNotificationPermission();
+          console.log("Current permission status:", permission);
+          setIsSubscribed(permission);
+        }
+      } catch (err) {
+        console.error("Error checking notification support:", err);
+        setError("Failed to check notification support");
       }
     };
     checkSupport();
@@ -19,21 +34,32 @@ export const NotificationButton = () => {
 
   const handleSubscribe = async () => {
     try {
+      console.log("Requesting notification permission...");
       const hasPermission = await checkNotificationPermission();
+      console.log("Permission granted:", hasPermission);
+
       if (hasPermission) {
-        await subscribeToNotifications();
+        const subscription = await subscribeToNotifications();
+        console.log("Subscription:", JSON.stringify(subscription));
         setIsSubscribed(true);
+        setError(null);
+      } else {
+        setError("Permission denied");
       }
     } catch (error) {
       console.error("Failed to subscribe:", error);
+      setError("Failed to subscribe to notifications");
     }
   };
 
   const handleSendNotification = async (type: "default" | "like" | "custom") => {
     try {
+      console.log(`Sending ${type} notification...`);
       await sendTestNotification(type);
+      setError(null);
     } catch (error) {
       console.error("Failed to send notification:", error);
+      setError(`Failed to send ${type} notification`);
     }
   };
 
@@ -43,12 +69,14 @@ export const NotificationButton = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <button
         onClick={handleSubscribe}
         disabled={isSubscribed}
         style={{
           padding: "10px 20px",
-          backgroundColor: isSubscribed ? "#ccc" : "#007bff",
+          backgroundColor: isSubscribed ? "#cccccc" : "#4CAF50",
           color: "white",
           border: "none",
           borderRadius: "5px",
@@ -60,45 +88,9 @@ export const NotificationButton = () => {
 
       {isSubscribed && (
         <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            onClick={() => handleSendNotification("default")}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#28a745",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            Send Default
-          </button>
-          <button
-            onClick={() => handleSendNotification("like")}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#dc3545",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            Send Like
-          </button>
-          <button
-            onClick={() => handleSendNotification("custom")}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "#17a2b8",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            Send Custom
-          </button>
+          <button onClick={() => testServerNotification()}>Send Test Notification</button>
+          <button onClick={() => handleSendNotification("like")}>Send Like Notification</button>
+          <button onClick={() => handleSendNotification("custom")}>Send Custom Notification</button>
         </div>
       )}
     </div>

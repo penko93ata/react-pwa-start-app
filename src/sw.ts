@@ -7,58 +7,79 @@ declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 import { precacheAndRoute } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
 
-interface NotificationAction {
-  action: string;
-  title: string;
-  icon?: string;
-}
-
-interface NotificationData {
-  type: string;
-  url: string;
-  postId?: string;
-  customData?: Record<string, unknown>;
+// Define a custom interface for notification options to include actions
+interface CustomNotificationOptions extends NotificationOptions {
+  actions?: { action: string; title: string; icon?: string }[];
 }
 
 // Enable service worker immediately
-clientsClaim();
 self.skipWaiting();
+clientsClaim();
+
+console.log("[Service Worker] Initializing");
+
+// Log installation
+self.addEventListener("install", (event) => {
+  console.log("[Service Worker] Installing...", event);
+});
+
+// Log activation
+self.addEventListener("activate", (event) => {
+  console.log("[Service Worker] Activated", event);
+});
 
 // Precache all assets
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Handle push notifications
+// Handle push events
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? {};
-  const options: NotificationOptions = {
-    body: data.body ?? "New notification",
-    icon: "/pwa-192x192.png",
-    badge: "/pwa-512x512.png",
-    // vibrate: [200, 100, 200],
-    data: {
-      url: data.url ?? "/",
-      ...data,
-    } as NotificationData,
-    actions: [
-      {
-        action: "open",
-        title: "Open App",
-        icon: "/icons/open.png",
-      },
-      {
-        action: "dismiss",
-        title: "Dismiss",
-        icon: "/icons/dismiss.png",
-      },
-      {
-        action: "like",
-        title: "Like",
-        icon: "/icons/like.png",
-      },
-    ] as NotificationAction[],
-  };
+  console.log("[Service Worker] Push event received", {
+    event,
+    data: event.data?.text(),
+    timestamp: new Date().toISOString(),
+  });
 
-  event.waitUntil(self.registration.showNotification(data.title ?? "New Notification", options));
+  if (!event.data) {
+    console.log("[Service Worker] No data received in push event");
+    return;
+  }
+
+  try {
+    const data = event.data.json();
+    console.log("[Service Worker] Push data:", data);
+
+    // Use the custom interface here
+    const options: CustomNotificationOptions = {
+      body: data.body || "New message received",
+      icon: "/pwa-192x192.png",
+      badge: "/pwa-512x512.png",
+      data: {
+        url: data.url || "/",
+        ...data,
+      },
+      actions: [
+        {
+          action: "open",
+          title: "Open",
+        },
+        {
+          action: "dismiss",
+          title: "Dismiss",
+        },
+      ],
+    };
+
+    console.log("[Service Worker] Showing notification with options:", options);
+
+    event.waitUntil(
+      self.registration
+        .showNotification(data.title || "New Message", options)
+        .then(() => console.log("[Service Worker] Notification shown successfully"))
+        .catch((error) => console.error("[Service Worker] Error showing notification:", error))
+    );
+  } catch (error) {
+    console.error("[Service Worker] Error handling push event:", error);
+  }
 });
 
 // Handle notification clicks
@@ -66,9 +87,10 @@ self.addEventListener("notificationclick", async (event) => {
   console.log("Notification clicked:", event.action);
   event.notification.close();
 
-  const urlToOpen = event.notification.data?.url ?? "/";
+  const urlToOpen = (event.notification.data as { url?: string })?.url ?? "/";
+  const action = event.action;
 
-  switch (event.action) {
+  switch (action) {
     case "open": {
       const windowClients = await self.clients.matchAll({
         type: "window",
@@ -88,29 +110,11 @@ self.addEventListener("notificationclick", async (event) => {
       break;
     }
 
-    case "like": {
-      console.log("Like action clicked");
-      const postId = event.notification.data?.postId;
-      if (postId) {
-        try {
-          // You would replace this with your actual API endpoint
-          const response = await fetch(`/api/like/${postId}`, {
-            method: "POST",
-          });
-          console.log("Like response:", response.ok);
-        } catch (error) {
-          console.error("Error sending like:", error);
-        }
-      }
-      break;
-    }
-
     case "dismiss":
       console.log("Notification dismissed");
       break;
 
     default: {
-      // Add opening brace here
       // If no action specified, open the default URL
       const allClients = await self.clients.matchAll({
         type: "window",
@@ -122,7 +126,6 @@ self.addEventListener("notificationclick", async (event) => {
       } else {
         await self.clients.openWindow(urlToOpen);
       }
-      break;
-    } // Add closing brace here
+    }
   }
 });
