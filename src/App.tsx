@@ -4,6 +4,7 @@ import appLogo from "/favicon.svg";
 import PWABadge from "./PWABadge.tsx";
 import "./App.css";
 import { NotificationButton } from "./components/NotificationButton.tsx";
+import ApiStatus from "./components/ApiStatus.tsx";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -28,6 +29,7 @@ function App() {
       <p className='read-the-docs'>Click on the Vite and React logos to learn more</p>
       <PWABadge />
       <NotificationButton />
+      <ApiStatus />
     </>
   );
 }

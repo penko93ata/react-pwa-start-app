@@ -6,6 +6,14 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    server: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:5001",
+          changeOrigin: true,
+        },
+      },
+    },
     define: {
       "import.meta.env.VITE_VAPID_PUBLIC_KEY": JSON.stringify(env.VAPID_PUBLIC_KEY),
     },
@@ -44,10 +52,11 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
+          navigateFallback: "/index.html",
           globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
           runtimeCaching: [
             {
-              urlPattern: /^https:\/\/api\.*/i,
+              urlPattern: ({ url }) => url.pathname.startsWith("/api"),
               handler: "NetworkFirst",
               options: {
                 cacheName: "api-cache",
