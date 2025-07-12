@@ -7,11 +7,6 @@ declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 import { precacheAndRoute } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
 
-// Define a custom interface for notification options to include actions
-interface CustomNotificationOptions extends NotificationOptions {
-  actions?: { action: string; title: string; icon?: string }[];
-}
-
 // Enable service worker immediately
 self.skipWaiting();
 clientsClaim();
@@ -33,53 +28,24 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // Handle push events
 self.addEventListener("push", (event) => {
-  console.log("[Service Worker] Push event received", {
-    event,
-    data: event.data?.text(),
-    timestamp: new Date().toISOString(),
-  });
+  console.log("[SW] Push event received. Attempting to show a basic notification.");
 
-  if (!event.data) {
-    console.log("[Service Worker] No data received in push event");
-    return;
-  }
+  const title = "It Works!";
+  const options = {
+    body: "If you see this, the push event was processed.",
+    icon: "/pwa-192x192.png",
+  };
 
-  try {
-    const data = event.data.json();
-    console.log("[Service Worker] Push data:", data);
-
-    // Use the custom interface here
-    const options: CustomNotificationOptions = {
-      body: data.body || "New message received",
-      icon: "/pwa-192x192.png",
-      badge: "/pwa-512x512.png",
-      data: {
-        url: data.url || "/",
-        ...data,
-      },
-      actions: [
-        {
-          action: "open",
-          title: "Open",
-        },
-        {
-          action: "dismiss",
-          title: "Dismiss",
-        },
-      ],
-    };
-
-    console.log("[Service Worker] Showing notification with options:", options);
-
-    event.waitUntil(
-      self.registration
-        .showNotification(data.title || "New Message", options)
-        .then(() => console.log("[Service Worker] Notification shown successfully"))
-        .catch((error) => console.error("[Service Worker] Error showing notification:", error))
-    );
-  } catch (error) {
-    console.error("[Service Worker] Error handling push event:", error);
-  }
+  event.waitUntil(
+    self.registration
+      .showNotification(title, options)
+      .then(() => {
+        console.log("[SW] showNotification promise resolved successfully.");
+      })
+      .catch((err) => {
+        console.error("[SW] showNotification promise was rejected:", err);
+      })
+  );
 });
 
 // Handle notification clicks

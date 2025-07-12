@@ -4,7 +4,7 @@ import * as webpush from "web-push";
 import * as dotenv from "dotenv";
 import * as path from "path";
 
-dotenv.config({ path: path.join(__dirname, ".env") });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 app.use(cors());
@@ -33,12 +33,15 @@ const subscriptions = new Map<string, webpush.PushSubscription>();
 // Save push subscription
 app.post("/api/subscribe", (req, res) => {
   const subscription = req.body as webpush.PushSubscription;
-  const id = Math.random().toString(36).substring(2);
 
-  console.log("Received subscription:", subscription);
-  subscriptions.set(id, subscription);
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ error: "Invalid subscription object" });
+  }
 
-  res.json({ id, message: "Subscription saved" });
+  console.log("Received new subscription:", subscription.endpoint);
+  subscriptions.set(subscription.endpoint, subscription);
+
+  res.status(201).json({ message: "Subscription saved" });
 });
 
 // Send push notification
@@ -67,6 +70,11 @@ app.post("/api/send-notification", async (req, res) => {
     res.status(500).json({ error: "Failed to send notifications" });
   }
 });
+
+// The VAPID public key endpoint is no longer needed.
+// app.get("/api/vapid-public-key", (_req, res) => {
+//   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+// });
 
 // Test endpoint
 app.get("/api/test", (_req, res) => {

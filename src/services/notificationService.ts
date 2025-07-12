@@ -1,4 +1,4 @@
-import { VAPID_PUBLIC_KEY } from "../config/vapid";
+// import { VAPID_PUBLIC_KEY } from "../config/vapid";
 
 const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -11,10 +11,6 @@ const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
-};
-
-const getVapidPublicKey = async (): Promise<Uint8Array> => {
-  return urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 };
 
 export const checkNotificationPermission = async (): Promise<boolean> => {
@@ -55,9 +51,17 @@ export const subscribeToNotifications = async () => {
   console.log("Subscribing to push notifications...");
 
   try {
+    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!vapidPublicKey) {
+      console.error("VAPID public key is not defined. Make sure it's set in your .env file and exposed in vite.config.ts");
+      throw new Error("VAPID public key is missing");
+    }
+
+    console.log("Using VAPID public key for subscription:", vapidPublicKey);
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: await getVapidPublicKey(),
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
     });
 
     console.log("Push subscription:", subscription);
@@ -85,7 +89,7 @@ export const subscribeToNotifications = async () => {
   }
 };
 
-export const testServerNotification = async () => {
+export const testServerNotification = async (payload: { title: string; body: string; url?: string }) => {
   try {
     const response = await fetch(`${API_URL}/api/send-notification`, {
       method: "POST",
@@ -93,9 +97,9 @@ export const testServerNotification = async () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        title: "Test Notification",
-        body: "This is a test notification from the server!",
-        url: "/",
+        title: payload.title,
+        body: payload.body,
+        url: payload.url || "/",
       }),
     });
 
@@ -108,53 +112,6 @@ export const testServerNotification = async () => {
     return result;
   } catch (error) {
     console.error("Error sending server notification:", error);
-    throw error;
-  }
-};
-
-export const sendTestNotification = async (type: "default" | "like" | "custom" = "default") => {
-  console.log(`Attempting to send ${type} notification...`);
-
-  if (!("Notification" in window)) {
-    console.error("Notifications not supported");
-    throw new Error("Notifications not supported");
-  }
-
-  if (Notification.permission !== "granted") {
-    console.error("Notification permission not granted");
-    throw new Error("Notification permission not granted");
-  }
-
-  try {
-    // Try direct notification first
-    console.log("Trying direct notification...");
-    new Notification("Test Direct Notification", {
-      body: "This is a direct notification test",
-      icon: "/pwa-192x192.png",
-    });
-
-    // Then try through service worker
-    console.log("Trying through service worker...");
-    const registration = await navigator.serviceWorker.ready;
-    console.log("Service Worker ready:", registration);
-
-    const options: NotificationOptions = {
-      body: "This is a test notification",
-      icon: "/pwa-192x192.png",
-      badge: "/pwa-512x512.png",
-      tag: "test-notification",
-      // renotify: true,
-      requireInteraction: true,
-      data: {
-        type: type,
-        url: "/",
-      },
-    };
-
-    await registration.showNotification("Test Notification", options);
-    console.log("Notification sent successfully");
-  } catch (error) {
-    console.error("Error sending notification:", error);
     throw error;
   }
 };

@@ -1,10 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  checkNotificationPermission,
-  subscribeToNotifications,
-  sendTestNotification,
-  testServerNotification,
-} from "../services/notificationService";
+import { checkNotificationPermission, subscribeToNotifications, testServerNotification } from "../services/notificationService";
 
 export const NotificationButton = () => {
   const [isSupported, setIsSupported] = useState(false);
@@ -52,17 +47,6 @@ export const NotificationButton = () => {
     }
   };
 
-  const handleSendNotification = async (type: "default" | "like" | "custom") => {
-    try {
-      console.log(`Sending ${type} notification...`);
-      await sendTestNotification(type);
-      setError(null);
-    } catch (error) {
-      console.error("Failed to send notification:", error);
-      setError(`Failed to send ${type} notification`);
-    }
-  };
-
   if (!isSupported) {
     return <p>Push notifications are not supported in this browser.</p>;
   }
@@ -88,9 +72,15 @@ export const NotificationButton = () => {
 
       {isSubscribed && (
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => testServerNotification()}>Send Test Notification</button>
-          <button onClick={() => handleSendNotification("like")}>Send Like Notification</button>
-          <button onClick={() => handleSendNotification("custom")}>Send Custom Notification</button>
+          <button onClick={() => testServerNotification({ title: "Test Notification", body: "This is a test from the server!" })}>
+            Send Test Notification
+          </button>
+          <button onClick={() => testServerNotification({ title: "Like Notification", body: "Someone liked your post!" })}>
+            Send Like Notification
+          </button>
+          <button onClick={() => testServerNotification({ title: "Custom Notification", body: "Here is some custom content." })}>
+            Send Custom Notification
+          </button>
         </div>
       )}
     </div>
