@@ -72,7 +72,7 @@ self.addEventListener("notificationclick", async (event) => {
       }
 
       // If no existing window, open a new one
-      await self.clients.openWindow(urlToOpen);
+      await event.waitUntil(self.clients.openWindow(urlToOpen));
       break;
     }
 
@@ -90,7 +90,7 @@ self.addEventListener("notificationclick", async (event) => {
       if (allClients.length > 0) {
         await allClients[0].focus();
       } else {
-        await self.clients.openWindow(urlToOpen);
+        await event.waitUntil(self.clients.openWindow(urlToOpen));
       }
     }
   }
