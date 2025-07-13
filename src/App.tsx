@@ -5,6 +5,7 @@ import PWABadge from "./PWABadge.tsx";
 import "./App.css";
 import { NotificationButton } from "./components/NotificationButton.tsx";
 import ApiStatus from "./components/ApiStatus.tsx";
+import { OnlineStatusIndicator } from "./components/OnlineStatusIndicator.tsx";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -30,6 +31,7 @@ function App() {
       <PWABadge />
       <NotificationButton />
       <ApiStatus />
+      <OnlineStatusIndicator />
     </>
   );
 }
