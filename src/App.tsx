@@ -15,6 +15,7 @@ function App() {
   const [inputValue, setInputValue] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [queuedItems, setQueuedItems] = useState<any[]>([]);
+  const [todo, setTodo] = useState<{ title: string } | null>(null);
 
   const isOnline = useOnlineStatus();
 
@@ -78,6 +79,19 @@ function App() {
     setInputValue("");
   };
 
+  const fetchTodo = async () => {
+    try {
+      const response = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      setTodo(data);
+    } catch (error) {
+      console.error("Failed to fetch todo:", error);
+    }
+  };
+
   return (
     <>
       <div>
@@ -113,6 +127,17 @@ function App() {
             <li key={item.timestamp}>{JSON.stringify(item.body)}</li>
           ))}
         </ul>
+      </div>
+
+      <div className='card'>
+        <h2>API Caching Example</h2>
+        <button onClick={fetchTodo}>Fetch Todo</button>
+        {todo && (
+          <div>
+            <h3>Fetched Todo Title:</h3>
+            <p>{todo.title}</p>
+          </div>
+        )}
       </div>
     </>
   );

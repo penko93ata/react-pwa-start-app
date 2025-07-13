@@ -6,6 +6,8 @@ declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
 import { precacheAndRoute } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
+import { registerRoute } from "workbox-routing";
+import { NetworkFirst } from "workbox-strategies";
 
 // Enable service worker immediately
 self.skipWaiting();
@@ -25,6 +27,37 @@ self.addEventListener("activate", (event) => {
 
 // Precache all assets
 precacheAndRoute(self.__WB_MANIFEST);
+
+// Cache API responses
+registerRoute(
+  ({ url }) => url.pathname.startsWith("/api/"),
+  new NetworkFirst({
+    cacheName: "api-cache",
+    plugins: [
+      {
+        // This plugin is useful for debugging
+        cacheDidUpdate: async ({ request }) => {
+          console.log(`[SW] Caching API response for ${request.url}`);
+        },
+      },
+    ],
+  })
+);
+
+// Cache JSONPlaceholder API responses
+registerRoute(
+  ({ url }) => url.hostname === "jsonplaceholder.typicode.com",
+  new NetworkFirst({
+    cacheName: "jsonplaceholder-cache",
+    plugins: [
+      {
+        cacheDidUpdate: async ({ request }) => {
+          console.log(`[SW] Caching JSONPlaceholder response for ${request.url}`);
+        },
+      },
+    ],
+  })
+);
 
 // Handle push events
 self.addEventListener("push", (event) => {
