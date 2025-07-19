@@ -6,6 +6,7 @@ import "./App.css";
 import { NotificationButton } from "./components/NotificationButton.tsx";
 import ApiStatus from "./components/ApiStatus.tsx";
 import { OnlineStatusIndicator } from "./components/OnlineStatusIndicator.tsx";
+import { CameraCapture } from "./components/CameraCapture.tsx";
 import { useOnlineStatus } from "./hooks/useOnlineStatus.ts";
 import { addToQueue, getQueue, clearQueue } from "./services/queueService.ts";
 import { mockApiRequest } from "./services/mockApiService.ts";
@@ -16,6 +17,7 @@ function App() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [queuedItems, setQueuedItems] = useState<any[]>([]);
   const [todo, setTodo] = useState<{ title: string } | null>(null);
+  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
 
   const isOnline = useOnlineStatus();
 
@@ -92,6 +94,11 @@ function App() {
     }
   };
 
+  const handlePhotoCapture = (photoDataUrl: string) => {
+    setCapturedPhotos((prev) => [...prev, photoDataUrl]);
+    console.log("Photo captured and stored!");
+  };
+
   return (
     <>
       <div>
@@ -114,6 +121,54 @@ function App() {
       <NotificationButton />
       <ApiStatus />
       <OnlineStatusIndicator />
+
+      {/* Camera Capture Section */}
+      <div className='card'>
+        <CameraCapture onPhotoCapture={handlePhotoCapture} />
+
+        {capturedPhotos.length > 0 && (
+          <div style={{ marginTop: "20px" }}>
+            <h3>📸 Photo Gallery ({capturedPhotos.length} photos)</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+                gap: "10px",
+                marginTop: "10px",
+              }}
+            >
+              {capturedPhotos.map((photo, index) => (
+                <img
+                  key={index}
+                  src={photo}
+                  alt={`Captured ${index + 1}`}
+                  style={{
+                    width: "100%",
+                    height: "100px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    border: "1px solid #ddd",
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setCapturedPhotos([])}
+              style={{
+                backgroundColor: "#f44336",
+                color: "white",
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                marginTop: "10px",
+              }}
+            >
+              Clear Gallery
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className='card'>
         <h2>Offline Queue Example</h2>
